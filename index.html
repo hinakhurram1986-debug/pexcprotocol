@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TPE Calculator - Age/Weight</title>
+    <title>TPE Calculator - Age & Weight</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f2f5; padding: 20px; color: #1c1e21; }
-        .container { max-width: 450px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
-        h2 { text-align: center; color: #1a73e8; margin-top: 0; }
+        body { font-family: -apple-system, sans-serif; background-color: #f4f7f6; padding: 20px; color: #333; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.85rem; color: #5f6368; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #dadce0; border-radius: 8px; box-sizing: border-box; font-size: 1rem; outline: none; }
-        input:focus { border-color: #1a73e8; }
-        .result-box { margin-top: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px; border: 1px solid #e8eaed; }
-        .result-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1rem; }
-        .highlight { font-weight: bold; color: #d93025; }
-        .section-title { font-weight: bold; margin: 15px 0 8px 0; color: #188038; border-top: 1px solid #eee; pt: 10px; display: block; }
-        footer { text-align: center; font-size: 0.75rem; margin-top: 20px; color: #70757a; line-height: 1.4; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        .result-box { margin-top: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; border-left: 5px solid #3498db; }
+        .result-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.05em; }
+        .highlight { font-weight: bold; color: #d35400; }
+        .label-blue { color: #2980b9; font-weight: bold; }
+        footer { text-align: center; font-size: 0.8em; margin-top: 20px; color: #7f8c8d; }
     </style>
 </head>
 <body>
@@ -25,7 +24,7 @@
     <h2>TPE Calculator</h2>
     
     <div class="input-group">
-        <label>Gender</label>
+        <label>Patient Gender</label>
         <select id="gender" onchange="calculate()">
             <option value="male">Male</option>
             <option value="female">Female</option>
@@ -34,7 +33,7 @@
 
     <div class="input-group">
         <label>Age (Years)</label>
-        <input type="number" id="age" placeholder="e.g. 45" oninput="calculate()">
+        <input type="number" id="age" placeholder="Enter age" oninput="calculate()">
     </div>
 
     <div class="input-group">
@@ -48,28 +47,28 @@
     </div>
 
     <div class="input-group">
-        <label>20% Albumin Volume (ml)</label>
-        <select id="albInput" onchange="calculate()">
+        <label>20% Human Albumin to use (ml)</label>
+        <select id="albuminInput" onchange="calculate()">
             <option value="200">200 ml</option>
             <option value="250">250 ml</option>
         </select>
     </div>
 
-    <div class="result-box">
-        <div class="result-item">Total Plasma Volume (1.0): <span class="highlight" id="pvDisplay">0</span> ml</div>
-        
-        <span class="section-title">Phase 1: 5% Albumin Replacement</span>
+    <div class="result-box" id="results">
+        <div class="result-item">Total Plasma Volume (1.0): <span class="label-blue" id="pvDisplay">0</span> ml</div>
+        <hr>
+        <div style="font-weight:bold; margin-bottom:10px; color:#c0392b;">Phase 1: Iso-oncotic 5% Albumin</div>
         <div class="result-item">20% Albumin: <span id="albUsed">0</span> ml</div>
-        <div class="result-item">Normal Saline (Diluent): <span id="nsAdd">0</span> ml</div>
-        <div class="result-item" style="font-weight:bold;">Total 5% Albumin: <span id="p1Total">0</span> ml</div>
-        
-        <span class="section-title">Phase 2: Remainder</span>
-        <div class="result-item"><strong>Haemaccel Volume:</strong> <span class="highlight" id="haemaccel">0</span> ml</div>
+        <div class="result-item">Normal Saline to add: <span id="nsAdd">0</span> ml</div>
+        <div class="result-item" style="font-weight:bold;">Total Phase 1: <span id="phase1Total">0</span> ml</div>
+        <hr>
+        <div style="font-weight:bold; margin-bottom:10px; color:#27ae60;">Phase 2: Remaining Volume</div>
+        <div class="result-item"><strong>Haemaccel Replacement:</strong> <span class="highlight" id="haemaccelVol">0</span> ml</div>
     </div>
 
     <footer>
-        Calculated using Gilcher's Rule of Five for TBV.<br>
-        Protocol: 1.0 PV Exchange.
+        *Method: Gilcher's Rule for TBV<br>
+        Protocol: 1.0 Plasma Volume Exchange
     </footer>
 </div>
 
@@ -79,38 +78,35 @@ function calculate() {
     const age = parseFloat(document.getElementById('age').value);
     const weight = parseFloat(document.getElementById('weight').value);
     const hct = parseFloat(document.getElementById('hct').value) / 100;
-    const albQty = parseFloat(document.getElementById('albInput').value);
+    const albVolume = parseFloat(document.getElementById('albuminInput').value);
 
     if (weight > 0 && age > 0 && hct > 0) {
-        // Gilcher's Rule (Average values for adult)
-        // Adjusts ml/kg based on gender/age slightly for a standard build
+        // Estimating Total Blood Volume (TBV) using Gilcher's Rule constants
+        // Average adult: Male 70ml/kg, Female 65ml/kg
         let mlPerKg = (gender === 'male') ? 70 : 65;
         
-        // Slight reduction for elderly (Age > 65)
-        if (age > 65) {
-            mlPerKg -= 5;
-        }
+        // Adjustment for elderly (65+)
+        if (age >= 65) { mlPerKg -= 5; }
 
         const tbv = weight * mlPerKg;
         const pv = tbv * (1 - hct);
         
-        // Replacement Protocol (1.0 x PV)
-        const totalToReplace = pv;
+        // Exchange Target (1.0 x PV)
+        const totalExchange = pv;
 
-        // Phase 1: 5% Albumin calculation
-        // To make 5% from 20%, you need 4x the albumin volume total
-        const phase1Total = albQty * 4;
-        const nsNeeded = phase1Total - albQty;
+        // Phase 1: 5% Albumin Prep (1 part 20% Albumin + 3 parts NS = 4 parts total)
+        const phase1Total = albVolume * 4;
+        const nsNeeded = phase1Total - albVolume;
 
-        // Phase 2: Remainder with Haemaccel
-        const remHaemaccel = totalToReplace - phase1Total;
+        // Phase 2: Haemaccel
+        const haemaccel = totalExchange - phase1Total;
 
-        // Update UI
+        // UI Updates
         document.getElementById('pvDisplay').innerText = Math.round(pv);
-        document.getElementById('albUsed').innerText = albQty;
+        document.getElementById('albUsed').innerText = albVolume;
         document.getElementById('nsAdd').innerText = Math.round(nsNeeded);
-        document.getElementById('p1Total').innerText = Math.round(phase1Total);
-        document.getElementById('haemaccel').innerText = remHaemaccel > 0 ? Math.round(remHaemaccel) : 0;
+        document.getElementById('phase1Total').innerText = Math.round(phase1Total);
+        document.getElementById('haemaccelVol').innerText = haemaccel > 0 ? Math.round(haemaccel) : 0;
     }
 }
 </script>
